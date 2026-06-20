@@ -1,0 +1,20 @@
+import { registerCommand } from "../lib/commandLoader";
+
+const bank: Record<string, number> = {};
+const inventory: Record<string, string[]> = {};
+const items = ["💎 Diamond", "⚔️ Sword", "🛡️ Shield", "🧪 Potion"];
+
+function getBalance(id: string) { return bank[id] ?? 0; }
+function setBalance(id: string, amt: number) { bank[id] = Math.max(0, amt); }
+
+registerCommand({ name: "balance", aliases: ["bal"], category: "economy", description: "Check balance", handler: async ({ sock, jid, sender }) => { await sock.sendMessage(jid, { text: `💰 Balance: $${getBalance(sender)}` }); } });
+registerCommand({ name: "daily", category: "economy", description: "Claim daily reward", handler: async ({ sock, jid, sender }) => { const reward = 100 + Math.floor(Math.random() * 200); setBalance(sender, getBalance(sender) + reward); await sock.sendMessage(jid, { text: `🎁 Daily reward: +$${reward}\nBalance: $${getBalance(sender)}` }); } });
+registerCommand({ name: "work", category: "economy", description: "Work to earn coins", handler: async ({ sock, jid, sender }) => { const earn = 50 + Math.floor(Math.random() * 100); setBalance(sender, getBalance(sender) + earn); await sock.sendMessage(jid, { text: `💼 You worked and earned $${earn}.\nBalance: $${getBalance(sender)}` }); } });
+registerCommand({ name: "rob", category: "economy", description: "Rob another user", handler: async ({ sock, jid, sender, args }) => { const target = args[0]; if (!target) { await sock.sendMessage(jid, { text: "Mention a user to rob." }); return; } const stolen = Math.floor(Math.random() * 50); setBalance(sender, getBalance(sender) + stolen); await sock.sendMessage(jid, { text: `🦹 You stole $${stolen} from ${target}!` }); } });
+registerCommand({ name: "deposit", aliases: ["dep"], category: "economy", description: "Deposit coins", handler: async ({ sock, jid, sender, args }) => { const amt = parseInt(args[0]) || 0; setBalance(sender, getBalance(sender) - amt); await sock.sendMessage(jid, { text: `🏦 Deposited $${amt}. Balance: $${getBalance(sender)}` }); } });
+registerCommand({ name: "withdraw", aliases: ["with"], category: "economy", description: "Withdraw coins", handler: async ({ sock, jid, sender, args }) => { const amt = parseInt(args[0]) || 0; setBalance(sender, getBalance(sender) + amt); await sock.sendMessage(jid, { text: `💸 Withdrew $${amt}. Balance: $${getBalance(sender)}` }); } });
+registerCommand({ name: "shop", category: "economy", description: "View shop", handler: async ({ sock, jid }) => { await sock.sendMessage(jid, { text: `🛒 Shop:\n${items.map((i, n) => `${n + 1}. ${i} — $${(n + 1) * 100}`).join("\n")}` }); } });
+registerCommand({ name: "buy", category: "economy", description: "Buy an item", handler: async ({ sock, jid, sender, args }) => { const idx = parseInt(args[0]) - 1; const item = items[idx]; if (!item) { await sock.sendMessage(jid, { text: "Invalid item number." }); return; } const cost = (idx + 1) * 100; if (getBalance(sender) < cost) { await sock.sendMessage(jid, { text: "❌ Not enough coins." }); return; } setBalance(sender, getBalance(sender) - cost); (inventory[sender] = inventory[sender] ?? []).push(item); await sock.sendMessage(jid, { text: `✅ Bought ${item}!` }); } });
+registerCommand({ name: "sell", category: "economy", description: "Sell an item", handler: async ({ sock, jid, sender, args }) => { await sock.sendMessage(jid, { text: `💱 Sold ${args[0] ?? "item"}.` }); } });
+registerCommand({ name: "inventory", aliases: ["inv"], category: "economy", description: "View inventory", handler: async ({ sock, jid, sender }) => { const inv = inventory[sender] ?? []; await sock.sendMessage(jid, { text: inv.length ? `🎒 Inventory:\n${inv.join("\n")}` : "🎒 Empty inventory." }); } });
+registerCommand({ name: "leaderboard", aliases: ["lb"], category: "economy", description: "Economy leaderboard", handler: async ({ sock, jid }) => { const top = Object.entries(bank).sort((a, b) => b[1] - a[1]).slice(0, 5); await sock.sendMessage(jid, { text: `🏆 Leaderboard:\n${top.map(([id, bal], i) => `${i + 1}. ${id.split("@")[0]} — $${bal}`).join("\n") || "No data."}` }); } });

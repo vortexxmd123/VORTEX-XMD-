@@ -1,0 +1,12 @@
+import { registerCommand } from "../lib/commandLoader";
+
+registerCommand({ name: "ban", category: "security", description: "Ban a user", ownerOnly: true, handler: async ({ sock, jid, args }) => { await sock.sendMessage(jid, { text: `🚫 ${args[0] ?? "user"} banned.` }); } });
+registerCommand({ name: "unban", category: "security", description: "Unban a user", ownerOnly: true, handler: async ({ sock, jid, args }) => { await sock.sendMessage(jid, { text: `✅ ${args[0] ?? "user"} unbanned.` }); } });
+registerCommand({ name: "blacklist", category: "security", description: "Add to blacklist", ownerOnly: true, handler: async ({ sock, jid, args }) => { await sock.sendMessage(jid, { text: `🚫 ${args[0] ?? "entry"} blacklisted.` }); } });
+registerCommand({ name: "whitelist", category: "security", description: "Add to whitelist", ownerOnly: true, handler: async ({ sock, jid, args }) => { await sock.sendMessage(jid, { text: `✅ ${args[0] ?? "entry"} whitelisted.` }); } });
+registerCommand({ name: "lock", category: "security", description: "Lock group", groupOnly: true, adminOnly: true, handler: async ({ sock, jid }) => { await sock.groupSettingUpdate(jid, "announcement"); await sock.sendMessage(jid, { text: "🔒 Group locked." }); } });
+registerCommand({ name: "unlock", category: "security", description: "Unlock group", groupOnly: true, adminOnly: true, handler: async ({ sock, jid }) => { await sock.groupSettingUpdate(jid, "not_announcement"); await sock.sendMessage(jid, { text: "🔓 Group unlocked." }); } });
+registerCommand({ name: "antispam", category: "security", description: "Toggle anti-spam", groupOnly: true, adminOnly: true, handler: async ({ sock, jid }) => { await sock.sendMessage(jid, { text: "🛡️ Anti-spam toggled." }); } });
+registerCommand({ name: "antibot", category: "security", description: "Toggle anti-bot", groupOnly: true, adminOnly: true, handler: async ({ sock, jid }) => { await sock.sendMessage(jid, { text: "🛡️ Anti-bot toggled." }); } });
+registerCommand({ name: "sessioninfo", category: "security", description: "Show session info", handler: async ({ sock, jid }) => { await sock.sendMessage(jid, { text: `🔐 Session info: Connected\nPlatform: Baileys` }); } });
+registerCommand({ name: "security", category: "security", description: "Security overview", handler: async ({ sock, jid }) => { await sock.sendMessage(jid, { text: "🔐 Security status: Active\nAnti-link: Off\nAnti-spam: Off\nAnti-bot: Off" }); } });

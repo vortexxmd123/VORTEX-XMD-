@@ -3,13 +3,28 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: VORTEX XMD WhatsApp Bot Pairing System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: sessions
+    description: WhatsApp session management
+  - name: pairing
+    description: Pairing code operations
+  - name: membership
+    description: Membership confirmation
+  - name: stats
+    description: Dashboard statistics
+  - name: logs
+    description: System logs
+  - name: admin
+    description: Admin panel operations
+  - name: commands
+    description: Bot command management
+
 paths:
   /healthz:
     get:
@@ -24,7 +39,424 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: List all sessions
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+
+  /sessions/{sessionId}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Get session by ID
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSession
+      tags: [sessions]
+      summary: Delete and disconnect a session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /sessions/{sessionId}/reconnect:
+    post:
+      operationId: reconnectSession
+      tags: [sessions]
+      summary: Force reconnect a session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reconnect initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /pair/request:
+    post:
+      operationId: requestPairCode
+      tags: [pairing]
+      summary: Request pairing code (requires membership)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PairRequest"
+      responses:
+        "200":
+          description: Pairing code issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PairResponse"
+        "400":
+          description: Bad request or membership not confirmed
+        "429":
+          description: Rate limit exceeded
+
+  /membership/confirm:
+    post:
+      operationId: confirmMembership
+      tags: [membership]
+      summary: Confirm WhatsApp group/channel membership
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MembershipInput"
+      responses:
+        "200":
+          description: Membership confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /membership/status:
+    get:
+      operationId: getMembershipStatus
+      tags: [membership]
+      summary: Check membership status for a phone number
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Membership status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MembershipStatus"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /logs:
+    get:
+      operationId: getLogs
+      tags: [logs]
+      summary: Get recent logs
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: level
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogEntry"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: JWT token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResult"
+        "401":
+          description: Invalid credentials
+
+  /admin/me:
+    get:
+      operationId: getAdminMe
+      tags: [admin]
+      summary: Get current admin user info
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Admin user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+
+  /admin/change-password:
+    post:
+      operationId: adminChangePassword
+      tags: [admin]
+      summary: Change admin password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /admin/settings:
+    get:
+      operationId: getSettings
+      tags: [admin]
+      summary: Get all bot settings
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Settings object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotSettings"
+    put:
+      operationId: updateSettings
+      tags: [admin]
+      summary: Batch update bot settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotSettings"
+
+  /admin/settings/apikeys:
+    put:
+      operationId: updateApiKeys
+      tags: [admin]
+      summary: Update sensitive API keys
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeysUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /admin/commands:
+    get:
+      operationId: listCommands
+      tags: [commands]
+      summary: List all commands
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Commands list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BotCommand"
+
+  /admin/commands/{name}:
+    patch:
+      operationId: toggleCommand
+      tags: [commands]
+      summary: Toggle command enabled state
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommandToggle"
+      responses:
+        "200":
+          description: Updated command
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotCommand"
+
+  /admin/sessions:
+    get:
+      operationId: adminListSessions
+      tags: [admin]
+      summary: Admin view of all sessions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+
+  /admin/broadcast:
+    post:
+      operationId: adminBroadcast
+      tags: [admin]
+      summary: Broadcast a message to sessions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BroadcastInput"
+      responses:
+        "200":
+          description: Broadcast logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /admin/restart-sessions:
+    post:
+      operationId: adminRestartSessions
+      tags: [admin]
+      summary: Restart all sessions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Restart initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /admin/logs:
+    get:
+      operationId: adminGetLogs
+      tags: [admin]
+      summary: Get all logs (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: level
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogEntry"
+    delete:
+      operationId: clearLogs
+      tags: [admin]
+      summary: Clear all logs
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Cleared
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +466,237 @@ components:
       required:
         - status
 
+    Session:
+      type: object
+      required: [id, sessionId, status, createdAt]
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: string
+        phoneNumber:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [connected, disconnected, connecting, pairing]
+        connectedAt:
+          type: ["string", "null"]
+        lastSeen:
+          type: ["string", "null"]
+        reconnectAttempts:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    PairRequest:
+      type: object
+      required: [phoneNumber]
+      properties:
+        phoneNumber:
+          type: string
+        sessionId:
+          type: string
+
+    PairResponse:
+      type: object
+      required: [pairingCode, sessionId]
+      properties:
+        pairingCode:
+          type: string
+        sessionId:
+          type: string
+        expiresIn:
+          type: integer
+
+    MembershipInput:
+      type: object
+      required: [phoneNumber]
+      properties:
+        phoneNumber:
+          type: string
+
+    MembershipStatus:
+      type: object
+      required: [confirmed]
+      properties:
+        confirmed:
+          type: boolean
+        confirmedAt:
+          type: ["string", "null"]
+
+    DashboardStats:
+      type: object
+      required: [activeSessions, totalSessions, pairingSuccessRate, uptime, totalLogs, commandsLoaded]
+      properties:
+        activeSessions:
+          type: integer
+        totalSessions:
+          type: integer
+        pairingSuccessRate:
+          type: number
+        uptime:
+          type: number
+        totalLogs:
+          type: integer
+        commandsLoaded:
+          type: integer
+
+    LogEntry:
+      type: object
+      required: [id, level, message, timestamp]
+      properties:
+        id:
+          type: integer
+        level:
+          type: string
+          enum: [info, warn, error, debug]
+        message:
+          type: string
+        sessionId:
+          type: ["string", "null"]
+        meta:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+
+    AdminLoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AdminLoginResult:
+      type: object
+      required: [token, username]
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+
+    AdminUser:
+      type: object
+      required: [id, username]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+
+    ChangePasswordInput:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+
+    BotSettings:
+      type: object
+      properties:
+        bot_name:
+          type: string
+        owner_name:
+          type: string
+        developer_name:
+          type: string
+        owner_contact:
+          type: string
+        prefix:
+          type: string
+        menu_footer:
+          type: string
+        owner_number:
+          type: string
+        welcome_message:
+          type: string
+        goodbye_message:
+          type: string
+
+    SettingsUpdate:
+      type: object
+      properties:
+        bot_name:
+          type: string
+        owner_name:
+          type: string
+        developer_name:
+          type: string
+        owner_contact:
+          type: string
+        prefix:
+          type: string
+        menu_footer:
+          type: string
+        owner_number:
+          type: string
+        welcome_message:
+          type: string
+        goodbye_message:
+          type: string
+
+    ApiKeysUpdate:
+      type: object
+      properties:
+        openai_api_key:
+          type: string
+        weather_api_key:
+          type: string
+
+    BotCommand:
+      type: object
+      required: [name, category, enabled, updatedAt]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: ["string", "null"]
+        aliases:
+          type: ["string", "null"]
+        usage:
+          type: ["string", "null"]
+        enabled:
+          type: boolean
+        adminOnly:
+          type: boolean
+        ownerOnly:
+          type: boolean
+        groupOnly:
+          type: boolean
+        updatedAt:
+          type: string
+
+    CommandToggle:
+      type: object
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean
+
+    BroadcastInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        sessionIds:
+          type: array
+          items:
+            type: string
+
+    ActionResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
