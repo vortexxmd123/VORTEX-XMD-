@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "FVzXJEsQBM3Kr8b99To5o"
+uri = "file://VORTEX_XMD_FULL_PROMPT.md"
+type = "text"
+title = "VORTEX XMD — Full Build Prompt (A–Z)"

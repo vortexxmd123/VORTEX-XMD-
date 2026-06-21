@@ -18,7 +18,11 @@ router.get("/logs", async (req, res): Promise<void> => {
     ? await db.select().from(logsTable).where(eq(logsTable.level, level)).orderBy(desc(logsTable.timestamp)).limit(limit)
     : await query;
 
-  res.json(GetLogsResponse.parse(rows));
+  const serialized = rows.map(r => ({
+    ...r,
+    timestamp: r.timestamp instanceof Date ? r.timestamp.toISOString() : r.timestamp,
+  }));
+  res.json(GetLogsResponse.parse(serialized));
 });
 
 export default router;
