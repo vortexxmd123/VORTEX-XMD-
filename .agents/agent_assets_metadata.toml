@@ -6,3 +6,9 @@ id = "FVzXJEsQBM3Kr8b99To5o"
 uri = "file://VORTEX_XMD_FULL_PROMPT.md"
 type = "text"
 title = "VORTEX XMD — Full Build Prompt (A–Z)"
+
+[[outputs]]
+id = "RWKf4VUIp7Nhl0GaiNuLc"
+uri = "file://RAILWAY_DEPLOY_GUIDE.md"
+type = "text"
+title = "Railway Deployment Guide — Step by Step"

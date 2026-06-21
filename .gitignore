@@ -47,3 +47,10 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# WhatsApp Sessions (contain auth keys — never commit these)
+sessions/
+
+# Railway / build artifacts
+artifacts/*/dist/
+
