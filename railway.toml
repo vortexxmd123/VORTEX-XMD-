@@ -1,12 +1,8 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm install --frozen-lockfile && pnpm --filter @workspace/vortex-xmd run build && pnpm --filter @workspace/api-server run build"
+buildCommand = "pnpm install --frozen-lockfile && pnpm run build:railway"
 
 [deploy]
-startCommand = "pnpm --filter @workspace/api-server run start"
+startCommand = "pnpm run start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
-
-[deploy.healthcheck]
-path = "/api/health"
-timeout = 30
